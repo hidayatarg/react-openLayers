@@ -8,6 +8,12 @@ import TileImage from "ol/source/TileImage";
 import {toLonLat} from 'ol/proj';
 import "./MyMap.css";
 
+// draw
+import Draw from 'ol/interaction/Draw';
+import {Vector as VectorLayer} from 'ol/layer';
+import {Vector as VectorSource} from 'ol/source';
+import {Fill, Stroke, Style, RegularShape} from 'ol/style';
+
 
 class PublicMap extends Component {
   constructor(props) {
@@ -58,6 +64,41 @@ class PublicMap extends Component {
     })
   }
 
+  addInteraction() {
+    this.removeInteraction();
+    let source = new VectorSource({wrapx: false});
+    var stroke = new Stroke({color: 'black', width: 1});
+    var fill = new Fill({color: 'red'});
+    let vector = new VectorLayer({
+      source: source,
+      style: new Style({
+        image: new RegularShape({
+          fill: fill,
+          stroke: stroke,
+          // 4 make triangle
+          points: 8,
+          radius: 6,
+          angle: Math.PI
+        })
+      })
+    });
+    this.olmap.addLayer(vector)
+    this.draw = new Draw({
+      source: source,
+      type: 'Point'
+    });
+    console.log('this draw', this.olmap);
+
+    this.olmap.addInteraction(this.draw)
+    console.log('this olmap', this.olmap);
+  }
+
+  removeInteraction() {
+    // this.draw.source.clear()
+    // this.draw.removeLastPoint();
+    this.olmap.removeInteraction(this.draw);
+  }
+
   shouldComponentUpdate(nextProps, nextState) {
     let center = this.olmap.getView().getCenter();
     let zoom = this.olmap.getView().getZoom();
@@ -77,7 +118,7 @@ class PublicMap extends Component {
       <div
         id="map"
         style={{ width: "98%", height: "600px" }}
-      
+        onClick={e => this.addInteraction()}
       >
         {/* <button onClick={e => this.userAction()}>setState on click</button> */}
       </div>
