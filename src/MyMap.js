@@ -34,10 +34,28 @@ class PublicMap extends Component {
       view: new OlView({
         center: this.state.center,
         zoom: this.state.zoom,
-        minZoom: 5,
+        minZoom: 8,
         maxZoom: 20
       })
     });
+    let source = new VectorSource({wrapx: false});
+    var stroke = new Stroke({color: 'black', width: 1});
+    var fill = new Fill({color: 'red'});
+    this.vector = new VectorLayer({
+      source: source,
+      style: new Style({
+        image: new RegularShape({
+          fill: fill,
+          stroke: stroke,
+          // 4 make triangle
+          points: 8,
+          radius: 6,
+          angle: Math.PI
+        })
+      })
+    });
+    this.olmap.addLayer(this.vector)
+
   }
 
   updateMap() {
@@ -59,44 +77,33 @@ class PublicMap extends Component {
 
     this.olmap.on('click',(e)=>{
       const translated = toLonLat(e.coordinate)
+      this.addInteraction();
       console.log(translated);
       
-    })
+    });
+
+    
+
   }
 
   addInteraction() {
-    this.removeInteraction();
-    let source = new VectorSource({wrapx: false});
-    var stroke = new Stroke({color: 'black', width: 1});
-    var fill = new Fill({color: 'red'});
-    let vector = new VectorLayer({
-      source: source,
-      style: new Style({
-        image: new RegularShape({
-          fill: fill,
-          stroke: stroke,
-          // 4 make triangle
-          points: 8,
-          radius: 6,
-          angle: Math.PI
-        })
-      })
-    });
-    this.olmap.addLayer(vector)
+    // Clean bellow line will help to add more points in the same layers
+    this.vector.getSource().clear();
+
+   
+    
     this.draw = new Draw({
-      source: source,
-      type: 'Point'
+      source: this.vector.getSource(),
+      type: 'Point',
+      stopClick: true
     });
-    console.log('this draw', this.olmap);
+    console.log('draw', this.draw);
+    this.draw.on('drawend', e => {
 
+      this.olmap.removeInteraction(this.draw);
+    })
     this.olmap.addInteraction(this.draw)
-    console.log('this olmap', this.olmap);
-  }
-
-  removeInteraction() {
-    // this.draw.source.clear()
-    // this.draw.removeLastPoint();
-    this.olmap.removeInteraction(this.draw);
+    console.log('olmap', this.olmap);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -118,7 +125,6 @@ class PublicMap extends Component {
       <div
         id="map"
         style={{ width: "98%", height: "600px" }}
-        onClick={e => this.addInteraction()}
       >
         {/* <button onClick={e => this.userAction()}>setState on click</button> */}
       </div>
